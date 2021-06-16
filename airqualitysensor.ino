@@ -36,18 +36,17 @@ void setup()
   if (airSensor.begin() == false)
   {
     Serial.println("Air sensor not detected. Please check wiring. Freezing...");
-    bot.sendMessage(CHATID, "Air sensor not detected. Please check wiring.", "");
+    bot.sendMessage(CHATID, "Air sensor not detected. Please check wiring.\n", "");
     while (1)
       ;
   }
 
-  Serial.print("Setup end");
-  bot.sendMessage(CHATID, "Aufgewacht", "");
+  Serial.print("Setup end\n");
 }
 
 void loop()
 {
-  Serial.print("Begin Loop");
+  Serial.print("Begin Loop\n");
   if ((airSensor.dataAvailable()) && (airSensor.getCO2() > 1000)) {
     Serial.print("CO2 too high");
     String message = translateActualValue + String(airSensor.getCO2()) + "ppm.\n" + translateOpen;
@@ -56,7 +55,7 @@ void loop()
     Serial.print("Air Quality is Ok");
     }
 
-  Serial.print("Begin Sleep");
+  Serial.print("Begin Sleep\n");
 
   ESP.deepSleep(time_between * 1000);
   delay(100);
