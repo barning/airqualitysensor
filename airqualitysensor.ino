@@ -16,6 +16,35 @@ void setup()
   Serial.println();
   Wire.begin();
 
+  if (airSensor.begin() == false)
+  {
+    Serial.println("Air sensor not detected. Please check wiring. Freezing...");
+    connectWifi();
+    botSetup();
+    bot.sendMessage(CHATID, "Air sensor not detected. Please check wiring.\n", "");
+    while (1);
+  }
+
+  Serial.print("Setup end\n");
+
+  if (airSensor.dataAvailable() && airSensor.getCO2() > 1000) {
+    connectWifi();
+    botSetup();
+    Serial.print("CO2 too high\n");
+    String message = translateActualValue + String(airSensor.getCO2()) + "ppm.\n" + translateOpen;
+    bot.sendMessage(CHATID, message, "");
+  }
+
+  Serial.print("Begin Sleep\n");
+  WiFi.disconnect();
+  ESP.deepSleep(time_between * 1000);
+  delay(100);
+}
+
+void loop() {}
+
+void connectWifi()
+{
   // attempt to connect to Wifi network:
   Serial.print("Connecting to Wifi SSID ");
   Serial.print(WIFI_SSID);
@@ -32,57 +61,6 @@ void setup()
 
   Serial.print("Retrieving time…\n");
   configTime(0, 0, "pool.ntp.org"); // get UTC time via NTP
-
-  botSetup();
-
-  if (airSensor.begin() == false)
-  {
-    Serial.println("Air sensor not detected. Please check wiring. Freezing...");
-    bot.sendMessage(CHATID, "Air sensor not detected. Please check wiring.\n", "");
-    while (1);
-  }
-
-  Serial.print("Setup end\n");
-}
-
-void loop()
-{
-  Serial.print("Begin Loop\n");
-  if ((airSensor.dataAvailable())) {
-    if (airSensor.getCO2() > 1000) {
-      Serial.print("CO2 too high\n");
-      String message = translateActualValue + String(airSensor.getCO2()) + "ppm.\n" + translateOpen;
-      bot.sendMessage(CHATID, message, "");
-    } else {
-      Serial.print("Air Quality is Ok\n");
-    }
-
-    int numNewMessages = bot.getUpdates(bot.last_message_received + 1);
-
-    while (numNewMessages)
-    {
-      Serial.println("User wants something!\n");
-      handleNewMessages(numNewMessages);
-      numNewMessages = bot.getUpdates(bot.last_message_received + 1);
-    }
-
-    Serial.print("Begin Sleep\n");
-    WiFi.disconnect();
-    ESP.deepSleep(time_between * 1000);
-    delay(100);
-  }
-}
-
-void handleNewMessages(int numNewMessages)
-{
-  for (int i = 0; i < numNewMessages; i++) {
-    String text = bot.messages[i].text;
-    if (text == "/getStatus")
-    {
-      String message = "CO2: " + String(airSensor.getCO2()) + "ppm.\n" + "Temperature: " + airSensor.getTemperature() + "C\n" + "Humidity: " + airSensor.getHumidity() + "%";
-      bot.sendMessage(CHATID, message, "");
-    }
-  }
 }
 
 void botSetup()
